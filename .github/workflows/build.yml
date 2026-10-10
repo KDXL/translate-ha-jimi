@@ -20,6 +20,15 @@ jobs:
 
       - run: pnpm install --no-frozen-lockfile
 
+      - name: Patch base paths
+        run: |
+          # 找出所有源码文件，把写死的 /hajimi/ 改成相对路径
+          grep -rl "createWebHistory" src/ | xargs -r sed -i "s|createWebHistory(['\"]/hajimi/['\"])|createWebHistory(import.meta.env.BASE_URL)|g"
+          grep -rl "'/hajimi/'" src/ | xargs -r sed -i "s|'/hajimi/'|import.meta.env.BASE_URL|g"
+          grep -rl '"/hajimi/"' src/ | xargs -r sed -i 's|"/hajimi/"|import.meta.env.BASE_URL|g'
+          # 打印替换结果，方便排查
+          grep -rn "hajimi" src/ || echo "源码里已经没有写死的 /hajimi/ 了"
+
       - run: pnpm run build
 
       - uses: actions/upload-artifact@v4
